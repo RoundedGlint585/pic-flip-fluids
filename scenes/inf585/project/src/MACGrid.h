@@ -21,11 +21,16 @@ public:
     size_t getYCellNumber() const;
     float getCellSize() const;
 
+    vcl::grid_2D<float>& getStaggeredHorizontal();
+    vcl::grid_2D<float>& getStaggeredVertical();
+
     barycentricCoordinate barycentricOnAxis(float coordinate) const;
+    barycentricCoordinate barycentricOffsetedX(float x) const; // for Mac grid
+    barycentricCoordinate barycentricOffsetedY(float y) const; // TODO: sort of similar code, take a look on unification
 
 private:
     vcl::grid_2D<float> pressure, density; //store in the center
-    vcl::grid_2D<float> staggeredHorizontal, staggeredVertically; //store on the edges
+    vcl::grid_2D<float> staggeredHorizontal, staggeredVertical; //store on the edges
     size_t xCellNumber, yCellNumber;
     float cellSize;
 };

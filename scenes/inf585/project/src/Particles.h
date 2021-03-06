@@ -16,8 +16,10 @@ private:
     size_t particlesCount;
     std::vector<vcl::vec2> positions, velocities;
 
-    void toGrid();
+    void toGrid(); // update grid velocity based on particles around
+    void updateExternalForces(float dt); // for now only gravity
     void fromGrid();
+    void addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D<float> &weight, float value, barycentricCoordinate xCoord, barycentricCoordinate yCoord) const;
 };
 
 

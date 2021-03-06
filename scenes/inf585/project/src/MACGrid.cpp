@@ -13,7 +13,7 @@ MACGrid::MACGrid(size_t xCellNumber, size_t yCellNumber, float cellSize): xCellN
     density.fill(0);
 
     staggeredHorizontal = vcl::grid_2D<float>(xCellNumber, yCellNumber + 1);
-    staggeredVertically = vcl::grid_2D<float>(xCellNumber + 1, yCellNumber);
+    staggeredVertical = vcl::grid_2D<float>(xCellNumber + 1, yCellNumber);
 
 }
 
@@ -30,7 +30,38 @@ float MACGrid::getCellSize() const {
 }
 
 barycentricCoordinate MACGrid::barycentricOnAxis(float coordinate) const {
-    float cellIndex = coordinate/cellSize;
-    return {static_cast<size_t>(cellIndex), cellIndex - std::floor(cellIndex) };
+    float cellsCoord = coordinate/cellSize;
+    return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord) };
 }
 
+barycentricCoordinate MACGrid::barycentricOffsetedX(float x) const {
+    float cellsCoord = x / cellSize - 0.5 * cellSize;
+    int cellIndex = static_cast<int>(cellsCoord);
+    if(cellIndex < 0){
+        return {0, 0.f};
+    }else if(cellIndex > xCellNumber -2){
+        return {xCellNumber - 2, 1.f};
+    }else{
+        return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord) };
+    }
+}
+
+barycentricCoordinate MACGrid::barycentricOffsetedY(float y) const {
+    float cellsCoord = y / cellSize - 0.5 * cellSize;
+    int cellIndex = static_cast<int>(cellsCoord);
+    if(cellIndex < 0){
+        return {0, 0.f};
+    }else if(cellIndex > yCellNumber -2){
+        return {yCellNumber - 2, 1.f};
+    }else{
+        return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord) };
+    }
+}
+
+vcl::grid_2D<float> &MACGrid::getStaggeredHorizontal() {
+    return staggeredHorizontal;
+}
+
+vcl::grid_2D<float> &MACGrid::getStaggeredVertical() {
+    return staggeredVertical;
+}
