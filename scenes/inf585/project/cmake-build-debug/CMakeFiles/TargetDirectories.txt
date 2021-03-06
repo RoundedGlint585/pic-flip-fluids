@@ -1,0 +1,3 @@
+/run/media/roundedglint585/NewVolume/Study/Master/INF585/FinalProject/scenes/inf585/project/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/run/media/roundedglint585/NewVolume/Study/Master/INF585/FinalProject/scenes/inf585/project/cmake-build-debug/CMakeFiles/edit_cache.dir
+/run/media/roundedglint585/NewVolume/Study/Master/INF585/FinalProject/scenes/inf585/project/cmake-build-debug/CMakeFiles/project.dir
