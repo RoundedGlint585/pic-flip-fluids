@@ -24,7 +24,7 @@ include("../../../library/CMakeLists.txt")
 #  @src_files: the local file for this project
 #  @src_files_vcl: all files of the VCL library
 #  @src_files_third_party: all third party libraries compiled with the project
-add_executable(${executable_name} ${src_files_vcl} ${src_files_third_party} ${src_files} src/simulation.cpp src/simulation.h src/MACGrid.cpp src/MACGrid.h src/Particles.cpp src/Particles.h src/Random.h)
+add_executable(${executable_name} ${src_files_vcl} ${src_files_third_party} ${src_files} src/simulation.cpp src/simulation.h src/MACGrid.cpp src/MACGrid.h src/Particles.cpp src/Particles.h src/Random.h src/boundaries.h)
 
 # Set Compiler for Unix system
 if(UNIX)

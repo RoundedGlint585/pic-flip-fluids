@@ -3,6 +3,7 @@
 //
 
 #include "MACGrid.h"
+#include "boundaries.h"
 
 #include <cmath>
 
@@ -227,5 +228,21 @@ MACGrid::performSweep(int fromX, int toX, int fromY, int toY, const std::functio
             function(i, j, di, dj);
         }
     }
+}
+
+vcl::grid_2D<float> MACGrid::getDivFreeField() const{
+    auto div = getDivergence();
+    // Gauss Seidel
+    vcl::grid_2D<float> q = vcl::grid_2D<float>(div.dimension[0], div.dimension[1]);
+    for(size_t k_iter=0; k_iter<20; ++k_iter)
+    {
+        for(size_t x=1; x<div.dimension[0]-1; ++x){
+            for(size_t y=1; y<div.dimension[1]-1; ++y){
+                q(x,y) = (q(x+1,y)+q(x-1,y)+q(x,y+1)+q(x,y-1)-div(x,y))/4.0f;
+            }
+        }
+        set_boundary(q);
+    }
+    return q;
 }
 

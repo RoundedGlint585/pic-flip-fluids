@@ -36,7 +36,7 @@ public:
     void updateBoundaries();
 
     vcl::grid_2D<float> getDivergence() const;
-
+    vcl::grid_2D<float> getDivFreeField() const;
     // this shit is tricky, i don't want to fix every part of fast sweeping, so this thing should do for in for and apply function
     // based on i, j, di, dj, basically just sent lambda
     void performSweep(int fromX, int toX, int fromY, int toY, const std::function<void(int, int, int, int)>& function);
