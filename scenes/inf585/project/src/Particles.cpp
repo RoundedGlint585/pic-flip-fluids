@@ -33,8 +33,8 @@ void Particles::toGrid() {
     weights.fill(0);
     for (size_t i = 0; i < positions.size(); i++) {
         auto &[x,y] = positions[i];
-        auto xCoord = grid.barycentricOnAxis(x);
-        auto yCoord = grid.barycentricOffsetedY(y);
+        auto xCoord = grid.barycentricOnX(x);
+        auto yCoord = grid.barycentricOnY(y);
         addPointToInterpolation(staggeredHorizontal, weights, velocities[i][0], xCoord, yCoord);
     }
     for(size_t i = 0; i < staggeredHorizontal.dimension[0]; i++){
@@ -52,8 +52,8 @@ void Particles::toGrid() {
 
     for (size_t i = 0; i < positions.size(); i++) {
         auto &[x,y] = positions[i];
-        auto xCoord = grid.barycentricOffsetedY(x);
-        auto yCoord = grid.barycentricOnAxis(y);
+        auto xCoord = grid.barycentricOnX(x);
+        auto yCoord = grid.barycentricOnY(y);
         addPointToInterpolation(staggeredHorizontal, weights, velocities[i][1], xCoord, yCoord);
     }
     for(size_t i = 0; i < staggeredVertical.dimension[0]; i++){

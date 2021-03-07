@@ -27,9 +27,8 @@ public:
     vcl::grid_2D<float>& getStaggeredVertical();
     vcl::grid_2D<cellType> &getCellTypes();
 
-    barycentricCoordinate barycentricOnAxis(float coordinate) const;
-    barycentricCoordinate barycentricOffsetedX(float x) const; // for Mac grid
-    barycentricCoordinate barycentricOffsetedY(float y) const; // TODO: sort of similar code, take a look on unification
+    barycentricCoordinate barycentricOnX(float x) const; // for Mac grid
+    barycentricCoordinate barycentricOnY(float y) const; // TODO: sort of similar code, take a look on unification
     void updateDistanceField();
 private:
     vcl::grid_2D<float> pressure, density; //store in the center

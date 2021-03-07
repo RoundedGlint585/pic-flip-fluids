@@ -34,7 +34,7 @@ barycentricCoordinate MACGrid::barycentricOnAxis(float coordinate) const {
     return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord) };
 }
 
-barycentricCoordinate MACGrid::barycentricOffsetedX(float x) const {
+barycentricCoordinate MACGrid::barycentricOnX(float x) const {
     float cellsCoord = x / cellSize - 0.5 * cellSize;
     int cellIndex = static_cast<int>(cellsCoord);
     if(cellIndex < 0){
@@ -46,7 +46,7 @@ barycentricCoordinate MACGrid::barycentricOffsetedX(float x) const {
     }
 }
 
-barycentricCoordinate MACGrid::barycentricOffsetedY(float y) const {
+barycentricCoordinate MACGrid::barycentricOnY(float y) const {
     float cellsCoord = y / cellSize - 0.5 * cellSize;
     int cellIndex = static_cast<int>(cellsCoord);
     if(cellIndex < 0){
