@@ -26,8 +26,8 @@ Particles::Particles(size_t particlesPerCellCount, const MACGrid &grid) : grid(g
 
 void Particles::toGrid() {
     //to check indexing, looks problematic
-    auto staggeredHorizontal = grid.getStaggeredHorizontal();
-    staggeredHorizontal.fill(0);
+    auto v = grid.getV();
+    v.fill(0);
 
     vcl::grid_2D<float> weights(grid.getYCellNumber() + 1, grid.getXCellNumber() + 1);
     weights.fill(0);
@@ -35,18 +35,18 @@ void Particles::toGrid() {
         auto &[x,y] = positions[i];
         auto xCoord = grid.barycentricOnX(x);
         auto yCoord = grid.barycentricOnY(y);
-        addPointToInterpolation(staggeredHorizontal, weights, velocities[i][0], xCoord, yCoord);
+        addPointToInterpolation(v, weights, velocities[i][0], xCoord, yCoord);
     }
-    for(size_t i = 0; i < staggeredHorizontal.dimension[0]; i++){
-        for(size_t j = 0; j < staggeredHorizontal.dimension[1]; j++){
-            if(staggeredHorizontal(i, j) > 0){
-                staggeredHorizontal(i, j) /= weights(i, j);
+    for(size_t i = 0; i < v.dimension[0]; i++){
+        for(size_t j = 0; j < v.dimension[1]; j++){
+            if(v(i, j) > 0){
+                v(i, j) /= weights(i, j);
             }
         }
     }
 
-    auto staggeredVertical = grid.getStaggeredVertical();
-    staggeredVertical.fill(0);
+    auto u = grid.getV();
+    u.fill(0);
 
     weights.fill(0);
 
@@ -54,12 +54,12 @@ void Particles::toGrid() {
         auto &[x,y] = positions[i];
         auto xCoord = grid.barycentricOnX(x);
         auto yCoord = grid.barycentricOnY(y);
-        addPointToInterpolation(staggeredHorizontal, weights, velocities[i][1], xCoord, yCoord);
+        addPointToInterpolation(v, weights, velocities[i][1], xCoord, yCoord);
     }
-    for(size_t i = 0; i < staggeredVertical.dimension[0]; i++){
-        for(size_t j = 0; j < staggeredVertical.dimension[1]; j++){
-            if(staggeredVertical(i, j) > 0){
-                staggeredVertical(i, j) /= weights(i, j);
+    for(size_t i = 0; i < u.dimension[0]; i++){
+        for(size_t j = 0; j < u.dimension[1]; j++){
+            if(u(i, j) > 0){
+                u(i, j) /= weights(i, j);
             }
         }
     }
@@ -89,5 +89,5 @@ void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D
 
 void Particles::updateExternalForces(float dt) {
     const float g = 9.8;
-    grid.getStaggeredHorizontal() -= dt * g;
+    grid.getV() -= dt * g;
 }
