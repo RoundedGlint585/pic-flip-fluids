@@ -21,6 +21,7 @@ Particles::Particles(size_t particlesPerCellCount, const MACGrid &grid) : grid(g
             }
         }
     }
+    this->grid.getCellTypes().fill(cellType::FLUID_CELL);
 }
 
 void Particles::toGrid() {
