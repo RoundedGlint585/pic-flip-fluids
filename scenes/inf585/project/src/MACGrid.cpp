@@ -127,3 +127,203 @@ void MACGrid::updateDistanceField() {
         }
     }
 }
+
+void MACGrid::interpolateVelocityWithFastSweep() {
+    sweepHorizontal(2);
+    sweepVertical(2);
+}
+
+void MACGrid::sweepHorizontal(size_t iterationCount) {
+    for(size_t k = 0; k < iterationCount; k++) {
+        for (size_t i = 1; i < staggeredHorizontal.dimension[0]; i++) {
+            for (size_t j = 1; j < staggeredHorizontal.dimension[1]; j++) {
+                if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                    float di = distanceField(i, j) - distanceField(i - 1, j);
+                    if (di < 0) {
+                        continue;
+                    }
+                    float dj = distanceField(i, j) - distanceField(i, j - 1);
+                    if (dj < 0) {
+                        continue;
+                    }
+                    float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                    staggeredHorizontal(i, j) =
+                            coeff * staggeredHorizontal(i - 1, j) + (1 - coeff) * staggeredHorizontal(i, j - 1);
+                }
+            }
+        }
+        for (size_t i = staggeredHorizontal.dimension[0] - 2; i >= 0; i--) {
+            for (size_t j = 1; j < staggeredHorizontal.dimension[1]; j++) {
+                if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                    float di = distanceField(i, j) - distanceField(i + 1, j);
+                    if (di < 0) {
+                        continue;
+                    }
+                    float dj = distanceField(i, j) - distanceField(i, j - 1);
+                    if (dj < 0) {
+                        continue;
+                    }
+                    float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                    staggeredHorizontal(i, j) =
+                            coeff * staggeredHorizontal(i + 1, j) + (1 - coeff) * staggeredHorizontal(i, j - 1);
+                }
+            }
+        }
+
+        for (size_t i = 1; i < staggeredHorizontal.dimension[0]; i++) {
+            for (size_t j = staggeredHorizontal.dimension[1] - 2; j >= 0; j--) {
+                if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                    float di = distanceField(i, j) - distanceField(i - 1, j);
+                    if (di < 0) {
+                        continue;
+                    }
+                    float dj = distanceField(i, j) - distanceField(i, j + 1);
+                    if (dj < 0) {
+                        continue;
+                    }
+                    float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                    staggeredHorizontal(i, j) =
+                            coeff * staggeredHorizontal(i - 1, j) + (1 - coeff) * staggeredHorizontal(i, j + 1);
+                }
+            }
+        }
+
+        for (size_t i = staggeredHorizontal.dimension[0] - 2; i >= 0; i--) {
+            for (size_t j = staggeredHorizontal.dimension[1] - 2; j >= 0; j--) {
+                if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i + 1, j) == cellType::EMPTY_CELL) {
+                    float di = distanceField(i, j) - distanceField(i + 1, j);
+                    if (di < 0) {
+                        continue;
+                    }
+                    float dj = distanceField(i, j) - distanceField(i, j + 1);
+                    if (dj < 0) {
+                        continue;
+                    }
+                    float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                    staggeredHorizontal(i, j) =
+                            coeff * staggeredHorizontal(i + 1, j) + (1 - coeff) * staggeredHorizontal(i, j + 1);
+                }
+            }
+        }
+    }
+    for (size_t i = 0; i < staggeredHorizontal.dimension[1]; i++) {
+        staggeredHorizontal(i, 0u) = staggeredHorizontal(i, 1u);
+        staggeredHorizontal(i, staggeredHorizontal.dimension[0] - 1) = staggeredHorizontal(i, staggeredHorizontal[0] - 2);
+    }
+    for(size_t i = 0; i < staggeredHorizontal.dimension[0]; i++){
+        staggeredHorizontal(0u, i) = staggeredHorizontal(1u, i);
+        staggeredHorizontal(staggeredHorizontal.dimension[1] - 1, i) = staggeredHorizontal(staggeredHorizontal.dimension[1] - 2, i);
+    }
+}
+
+void MACGrid::sweepVertical(size_t iterationCount) {
+
+    for (size_t i = 1; i < staggeredVertical.dimension[0]; i++) {
+        for (size_t j = 1; j < staggeredVertical.dimension[1]; j++) {
+            if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                float di = distanceField(i, j) - distanceField(i, j-1);
+                if (di < 0) {
+                    continue;
+                }
+                float dj = distanceField(i, j) - distanceField(i-1, j);
+                if (dj < 0) {
+                    continue;
+                }
+                float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                staggeredVertical(i, j) =
+                        coeff * staggeredVertical(i - 1, j) + (1 - coeff) * staggeredVertical(i, j - 1);
+            }
+        }
+    }
+    for (size_t i = staggeredVertical.dimension[0] - 2; i >= 0; i--) {
+        for (size_t j = 1; j < staggeredVertical.dimension[1]; j++) {
+            if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                float di = distanceField(i, j) - distanceField(i, j - 1);
+                if (di < 0) {
+                    continue;
+                }
+                float dj = distanceField(i, j) - distanceField(i + 1, j);
+                if (dj < 0) {
+                    continue;
+                }
+                float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                staggeredVertical(i, j) =
+                        coeff * staggeredVertical(i + 1, j) + (1 - coeff) * staggeredVertical(i, j - 1);
+            }
+        }
+    }
+
+    for (size_t i = 1; i < staggeredVertical.dimension[0]; i++) {
+        for (size_t j = staggeredVertical.dimension[1] - 2; j >= 0; j--) {
+            if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
+                float di = distanceField(i, j) - distanceField(i, j + 1);
+                if (di < 0) {
+                    continue;
+                }
+                float dj = distanceField(i, j) - distanceField(i - 1, j);
+                if (dj < 0) {
+                    continue;
+                }
+                float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                staggeredVertical(i, j) =
+                        coeff * staggeredVertical(i - 1, j) + (1 - coeff) * staggeredVertical(i, j + 1);
+            }
+        }
+    }
+
+    for (size_t i = staggeredVertical.dimension[0] - 2; i >= 0; i--) {
+        for (size_t j = staggeredVertical.dimension[1] - 2; j >= 0; j--) {
+            if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i + 1, j) == cellType::EMPTY_CELL) {
+                float di = distanceField(i, j) - distanceField(i, j + 1);
+                if (di < 0) {
+                    continue;
+                }
+                float dj = distanceField(i, j) - distanceField(i + 1, j);
+                if (dj < 0) {
+                    continue;
+                }
+                float coeff = (di + dj) < std::numeric_limits<float>::epsilon() ? 0.5 : di / (di + dj);
+                staggeredVertical(i, j) =
+                        coeff * staggeredVertical(i + 1, j) + (1 - coeff) * staggeredVertical(i, j + 1);
+            }
+        }
+    }
+    for (size_t i = 0; i < staggeredVertical.dimension[1]; i++) {
+        staggeredVertical(i, 0u) = staggeredVertical(i, 1u);
+        staggeredVertical(i, staggeredVertical.dimension[0] - 1) = staggeredVertical(i, staggeredVertical[0] - 2);
+    }
+    for(size_t i = 0; i < staggeredVertical.dimension[0]; i++){
+        staggeredVertical(0u, i) = staggeredVertical(1u, i);
+        staggeredVertical(staggeredVertical.dimension[1] - 1, i) = staggeredVertical(staggeredVertical.dimension[1] - 2, i);
+    }
+}
+
+void MACGrid::updateBoundaries() {
+    for(size_t i = 0; i < cellTypes.dimension[0]; i++){
+        cellTypes(i, 0u) = cellType::SOLID_CELL;
+        cellTypes(i, cellTypes.dimension[1]-1) = cellType::SOLID_CELL;
+    }
+    for(size_t i = 0; i < cellTypes.dimension[1]; i++){
+        cellTypes(0u, i) = cellType::SOLID_CELL;
+        cellTypes(cellTypes.dimension[0]-1, i) = cellType::SOLID_CELL;
+    }
+
+    for(size_t i = 0; i < staggeredHorizontal.dimension[0]; i++){
+        staggeredHorizontal(i, 0u) = 0;
+        staggeredHorizontal(i, 1u) = 0;
+        staggeredHorizontal(i, staggeredHorizontal.dimension[1] - 1) = 0;
+        staggeredHorizontal(i, staggeredHorizontal.dimension[1] - 2) = 0;
+    }
+    for(size_t i = 0; i < staggeredHorizontal.dimension[0]; i++){
+        staggeredHorizontal(i, 0u) = 0;
+        staggeredHorizontal(i, 1u) = 0;
+        staggeredHorizontal(i, staggeredHorizontal.dimension[1] - 1) = 0;
+        staggeredHorizontal(i, staggeredHorizontal.dimension[1] - 2) = 0;
+    }
+    for(size_t i = 0; i < staggeredVertical.dimension[1]; i++){
+        staggeredVertical(0u, i) = 0;
+        staggeredVertical(1u, i) = 0;
+        staggeredVertical(staggeredVertical.dimension[0] - 1, i) = 0;
+        staggeredVertical(staggeredVertical.dimension[0] - 2, i) = 0;
+    }
+}

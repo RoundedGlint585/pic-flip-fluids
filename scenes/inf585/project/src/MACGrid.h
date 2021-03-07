@@ -15,7 +15,8 @@ struct barycentricCoordinate{
 };
 enum cellType{
     EMPTY_CELL,
-    FLUID_CELL, // cell with at least one particle
+    FLUID_CELL,// cell with at least one particle
+    SOLID_CELL,
 };
 class MACGrid {
 public:
@@ -30,7 +31,12 @@ public:
     barycentricCoordinate barycentricOnX(float x) const; // for Mac grid
     barycentricCoordinate barycentricOnY(float y) const; // TODO: sort of similar code, take a look on unification
     void updateDistanceField();
+    void interpolateVelocityWithFastSweep();
+    void updateBoundaries();
 private:
+
+    void sweepHorizontal(size_t iterationCount);
+    void sweepVertical(size_t iterationCount);
     vcl::grid_2D<float> pressure, density; //store in the center
     vcl::grid_2D<float> staggeredHorizontal, staggeredVertical; //store on the edges
     vcl::grid_2D<cellType> cellTypes;
