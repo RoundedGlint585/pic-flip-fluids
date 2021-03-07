@@ -1,5 +1,0 @@
-/home/roundedglint585/App/clion-2020.2.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -G "CodeBlocks - Unix Makefiles" /run/media/roundedglint585/NewVolume/Study/Master/INF585/FinalProject/scenes/inf585/project
--- Configure steps to build executable file [project]
--- Configuring done
--- Generating done
--- Build files have been written to: /run/media/roundedglint585/NewVolume/Study/Master/INF585/FinalProject/scenes/inf585/project/cmake-build-debug
