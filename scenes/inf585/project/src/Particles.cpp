@@ -91,3 +91,15 @@ void Particles::updateExternalForces(float dt) {
     const float g = 9.8;
     grid.getV() -= dt * g;
 }
+
+void Particles::fromGrid() {
+    for(size_t i = 0; i < positions.size(); i++){
+        float u = vcl::interpolation_bilinear(grid.getU(), positions[i][0], positions[i][1]);
+        float v = vcl::interpolation_bilinear(grid.getV(), positions[i][0], positions[i][1]);
+        velocities[i] = {u, v}; //PIC step
+    }
+}
+
+void Particles::step(float dt) {
+
+}

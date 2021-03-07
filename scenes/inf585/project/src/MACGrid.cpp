@@ -35,7 +35,7 @@ float MACGrid::getCellSize() const {
 }
 
 barycentricCoordinate MACGrid::barycentricOnX(float x) const {
-    float cellsCoord = x / cellSize - 0.5 * cellSize;
+    float cellsCoord = x / cellSize;
     int cellIndex = static_cast<int>(cellsCoord);
     if (cellIndex < 0) {
         return {0, 0.f};
@@ -47,7 +47,7 @@ barycentricCoordinate MACGrid::barycentricOnX(float x) const {
 }
 
 barycentricCoordinate MACGrid::barycentricOnY(float y) const {
-    float cellsCoord = y / cellSize - 0.5 * cellSize;
+    float cellsCoord = y / cellSize;
     int cellIndex = static_cast<int>(cellsCoord);
     if (cellIndex < 0) {
         return {0, 0.f};
@@ -230,19 +230,37 @@ MACGrid::performSweep(int fromX, int toX, int fromY, int toY, const std::functio
     }
 }
 
-vcl::grid_2D<float> MACGrid::getDivFreeField() const{
+void MACGrid::divFreeField() {
     auto div = getDivergence();
     // Gauss Seidel
     vcl::grid_2D<float> q = vcl::grid_2D<float>(div.dimension[0], div.dimension[1]);
-    for(size_t k_iter=0; k_iter<20; ++k_iter)
-    {
-        for(size_t x=1; x<div.dimension[0]-1; ++x){
-            for(size_t y=1; y<div.dimension[1]-1; ++y){
-                q(x,y) = (q(x+1,y)+q(x-1,y)+q(x,y+1)+q(x,y-1)-div(x,y))/4.0f;
+    for (size_t k_iter = 0; k_iter < 20; ++k_iter) {
+        for (size_t x = 1; x < div.dimension[0] - 1; ++x) {
+            for (size_t y = 1; y < div.dimension[1] - 1; ++y) {
+                q(x, y) = (q(x + 1, y) + q(x - 1, y) + q(x, y + 1) + q(x, y - 1) - div(x, y)) / 4.0f;
             }
         }
         set_boundary(q);
     }
-    return q;
+    for (size_t x = 1; x < u.dimension[0] - 1; ++x) {
+        for (size_t y = 1; y < u.dimension[1] - 1; ++y) {
+            u(x, y) = u(x, y) - (q(x + 1, y) - q(x - 1, y));
+            v(x, y) = v(x, y) - (q(x, y + 1) - q(x, y - 1));
+        }
+    }
+    set_boundary(u);
+    set_boundary(v);
+}
+
+barycentricCoordinate MACGrid::barycentricOnXUnsafe(float x) const {
+    float cellsCoord = x / cellSize;
+    int cellIndex = static_cast<int>(cellsCoord);
+    return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord)};
+}
+
+barycentricCoordinate MACGrid::barycentricOnYUnsafe(float y) const{
+    float cellsCoord = y / cellSize;
+    int cellIndex = static_cast<int>(cellsCoord);
+    return {static_cast<size_t>(cellsCoord), cellsCoord - std::floor(cellsCoord)};
 }
 
