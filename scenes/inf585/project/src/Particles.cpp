@@ -101,5 +101,23 @@ void Particles::fromGrid() {
 }
 
 void Particles::step(float dt) {
+    moveParticles(dt);
+    toGrid();
+    updateExternalForces(dt);
+    grid.updateDistanceField();
+    grid.interpolateVelocityWithFastSweep();
+    grid.updateBoundaries();
+    grid.divFreeField();
+    fromGrid();
+}
 
+void Particles::moveParticles(float dt) {
+    for(auto & position : positions){
+        float u = vcl::interpolation_bilinear(grid.getU(), position[0], position[1]);
+        float v = vcl::interpolation_bilinear(grid.getV(), position[0], position[1]);
+        vcl::vec2 firstStep = position + 0.5f * dt * vcl::vec2{u,v};
+        u = vcl::interpolation_bilinear(grid.getU(), firstStep.x, firstStep.y);
+        v = vcl::interpolation_bilinear(grid.getV(), firstStep.x, firstStep.y);
+        position += dt * vcl::vec2{u,v};
+    }
 }
