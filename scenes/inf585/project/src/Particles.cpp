@@ -126,6 +126,7 @@ void Particles::step(float dt) {
 }
 
 void Particles::moveParticles(float dt) {
+
     for (auto &position : positions) {
         position[0] = std::clamp(position[0], 0.f, (grid.getU().dimension.x - 2) * grid.getCellSize());
         position[1] = std::clamp(position[1], 0.f, (grid.getU().dimension.y - 2) * grid.getCellSize());
@@ -135,5 +136,7 @@ void Particles::moveParticles(float dt) {
         u = vcl::interpolation_bilinear(grid.getU(), firstStep.x, firstStep.y);
         v = vcl::interpolation_bilinear(grid.getV(), firstStep.x, firstStep.y);
         position += dt * vcl::vec2{u, v};
+        position[0] = std::clamp(position[0], 0.f, (grid.getU().dimension.x - 2) * grid.getCellSize());
+        position[1] = std::clamp(position[1], 0.f, (grid.getU().dimension.y - 2) * grid.getCellSize());
     }
 }
