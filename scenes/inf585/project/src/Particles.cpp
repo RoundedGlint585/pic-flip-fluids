@@ -109,8 +109,10 @@ void Particles::updateExternalForces(float dt) {
 
 void Particles::fromGrid() {
     for (size_t i = 0; i < positions.size(); i++) {
-        float u = vcl::interpolation_bilinear(grid.getU(), positions[i][0], positions[i][1]);
-        float v = vcl::interpolation_bilinear(grid.getV(), positions[i][0], positions[i][1]);
+        vcl::vec2 positionIndexed = clampPosAccordingToGrid(grid.getU(), positions[i]);
+        float u = vcl::interpolation_bilinear(grid.getU(), positionIndexed[0], positionIndexed[1]);
+        positionIndexed = clampPosAccordingToGrid(grid.getV(), positions[i]);
+        float v = vcl::interpolation_bilinear(grid.getV(), positionIndexed[0], positionIndexed[1]);
         velocities[i] = {u, v}; //PIC step
     }
 }
