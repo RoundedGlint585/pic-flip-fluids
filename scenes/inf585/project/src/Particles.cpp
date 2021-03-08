@@ -103,6 +103,7 @@ void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D
 
 void Particles::updateExternalForces(float dt) {
     const float g = 9.8;
+    std::cout << "test: " << dt * g << std::endl;
     grid.getV() -= dt * g;
 }
 
@@ -116,27 +117,33 @@ void Particles::fromGrid() {
 
 void Particles::step(float dt) {
     moveParticles(dt);
-//    toGrid();
+    toGrid();
     updateExternalForces(dt);
-//    grid.updateDistanceField();
-//    grid.interpolateVelocityWithFastSweep();
-//    grid.updateBoundaries();
-//    grid.divFreeField();
-//    fromGrid();
+    grid.updateDistanceField();
+    grid.interpolateVelocityWithFastSweep();
+    grid.updateBoundaries();
+    grid.divFreeField();
+    fromGrid();
 }
 
 void Particles::moveParticles(float dt) {
-
     for (auto &position : positions) {
-        position[0] = std::clamp(position[0], 0.f, (grid.getU().dimension.x - 2) * grid.getCellSize());
-        position[1] = std::clamp(position[1], 0.f, (grid.getU().dimension.y - 2) * grid.getCellSize());
-        float u = vcl::interpolation_bilinear(grid.getU(), position[0], position[1]);
-        float v = vcl::interpolation_bilinear(grid.getV(), position[0], position[1]);
+        vcl::vec2 positionIndexedU = clampPosAccordingToGrid(grid.getU(), position);
+        vcl::vec2 positionIndexedV = clampPosAccordingToGrid(grid.getV(), position);
+        float u = vcl::interpolation_bilinear(grid.getU(), positionIndexedU[0], positionIndexedU[1]);
+        float v = vcl::interpolation_bilinear(grid.getV(), positionIndexedV[0], positionIndexedV[1]);
         vcl::vec2 firstStep = position + 0.5f * dt * vcl::vec2{u, v};
-        u = vcl::interpolation_bilinear(grid.getU(), firstStep.x, firstStep.y);
-        v = vcl::interpolation_bilinear(grid.getV(), firstStep.x, firstStep.y);
+        positionIndexedU = clampPosAccordingToGrid(grid.getU(), firstStep);
+        positionIndexedV = clampPosAccordingToGrid(grid.getV(), firstStep);
+        u = vcl::interpolation_bilinear(grid.getU(), positionIndexedU[0], positionIndexedU[1]);
+        v = vcl::interpolation_bilinear(grid.getV(), positionIndexedV[0], positionIndexedV[1]);
         position += dt * vcl::vec2{u, v};
-        position[0] = std::clamp(position[0], 0.f, (grid.getU().dimension.x - 2) * grid.getCellSize());
-        position[1] = std::clamp(position[1], 0.f, (grid.getU().dimension.y - 2) * grid.getCellSize());
     }
+}
+
+vcl::vec2 Particles::clampPosAccordingToGrid(const vcl::grid_2D<float> &grid, const vcl::vec2 &pos) const{
+    float cellSize = this->grid.getCellSize();
+    return {std::clamp(pos[0]/cellSize, 0.f, static_cast<float>(grid.dimension[0]-1.001)), // 1.001 is sort of workaround
+            std::clamp(pos[1]/cellSize, 0.f, static_cast<float>(grid.dimension[1]-1.001))};
+
 }

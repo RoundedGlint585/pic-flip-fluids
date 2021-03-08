@@ -4,11 +4,11 @@
 
 #include "simulation.h"
 
-void simulate(Particles particles, float dt)
+void simulate(Particles &particles, float dt)
 {
 
 	// Update values
-	particles.step(dt);
+	//particles.step(dt);
 	// Numerical integration
 	/*float const damping = 0.005f;
 	size_t const N = particles.size();

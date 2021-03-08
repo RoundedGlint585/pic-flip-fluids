@@ -128,7 +128,7 @@ int main(int, char* argv[])
 		user.cursor_on_gui = ImGui::IsAnyWindowFocused();
 
 		float const dt = 0.005f * timer.scale;
-		simulate(particles, dt);
+		particles.step(dt);
 		
 		// Set the GUI interface (widgets: buttons, checkbox, sliders, etc)
 		display_interface();
@@ -204,7 +204,6 @@ void display_scene(float time)
 	auto positions = particles.getParticlePositions();
 	if (user.gui.display_particles) {
 		for (auto & position : positions) {
-		    std::cout << position[0] << " " << position[1] << std::endl;
 			vec3 const& p = vec3 (position, 0);
 			sphere_particle.transform.translate = p;
 			draw(sphere_particle, scene);
