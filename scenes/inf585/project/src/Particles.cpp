@@ -118,19 +118,36 @@ void Particles::step(float dt) {
     toGrid();
     updateExternalForces(dt);
     grid.updateDistanceField();
+    std::cout << "ok 3 5" << std::endl;
     grid.interpolateVelocityWithFastSweep();
+    std::cout << "ok 3 6" << std::endl;
     grid.updateBoundaries();
+    std::cout << "ok 3 7" << std::endl;
     grid.divFreeField();
+    std::cout << "ok 3 8" << std::endl;
     fromGrid();
+    std::cout << "ok 3" << std::endl;
 }
 
 void Particles::moveParticles(float dt) {
     for(auto & position : positions){
+        auto tmp = position;
+        tmp[0] < 0 ? tmp[0] = 0.0f : tmp[0];
+        tmp[0] + 1 >= grid.getU().dimension.x ? tmp[0] = grid.getU().dimension.x - 2 : tmp[0];
+        tmp[1] < 0 ? tmp[1] = 0.0f : tmp[1];
+        tmp[1] + 1 >= grid.getU().dimension.y ? tmp[1] = grid.getU().dimension.y - 2 : tmp[1];
+        position = tmp;
         float u = vcl::interpolation_bilinear(grid.getU(), position[0], position[1]);
+        tmp = position;
+        tmp[0] < 0 ? tmp[0] = 0.0f : tmp[0];
+        tmp[0] + 1 >= grid.getV().dimension.x ? tmp[0] = grid.getV().dimension.x - 2 : tmp[0];
+        tmp[1] < 0 ? tmp[1] = 0.0f : tmp[1];
+        tmp[1] + 1 >= grid.getV().dimension.y ? tmp[1] = grid.getV().dimension.y - 2 : tmp[1];
+        position = tmp;
         float v = vcl::interpolation_bilinear(grid.getV(), position[0], position[1]);
         vcl::vec2 firstStep = position + 0.5f * dt * vcl::vec2{u,v};
         u = vcl::interpolation_bilinear(grid.getU(), firstStep.x, firstStep.y);
         v = vcl::interpolation_bilinear(grid.getV(), firstStep.x, firstStep.y);
-        position += dt * vcl::vec2{u,v};
+        position += dt * vcl::vec2{ u,v };
     }
 }

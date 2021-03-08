@@ -129,12 +129,15 @@ int main(int, char* argv[])
 
 		float const dt = 0.005f * timer.scale;
 		simulate(particles, dt);
+		std::cout << "ok 4" << std::endl;
 		
 		// Set the GUI interface (widgets: buttons, checkbox, sliders, etc)
 		display_interface();
+		std::cout << "ok 5" << std::endl;
 
 		// Display the objects of the scene
 		display_scene(timer.t);
+		std::cout << "ok 6" << std::endl;
 
 
 		// Display GUI
@@ -156,7 +159,6 @@ int main(int, char* argv[])
 
 void initialize_pic() {
 	//
-
 }
 
 void initialize_data()
@@ -182,8 +184,8 @@ void initialize_data()
 
 	vec3 const camera_position = { 0,0,1.0f };        // position of the camera in space
 	vec3 const camera_target_position = {0,0,0}; // position the camera is looking at / point around which the camera rotates
-	vec3 const up = {0,0,1};                     // approximated "up" vector of the camera
-	scene.camera.look_at(camera_position, camera_target_position, up); 
+	vec3 const up = {0,1,0};                     // approximated "up" vector of the camera
+	scene.camera.look_at(camera_position, camera_target_position, up);
 
 	// Prepare the objects visible in the scene
 	// *************************************** //
