@@ -71,9 +71,9 @@ void update_field_color(MACGrid& grid, Particles& particles);
 // Declaration of Global variables
 // ****************************************** //
 timer_basic timer;
-MACGrid grid;
+MACGrid grid(10, 10, 0.1);
 mesh_drawable field_quad;
-Particles particles(1, grid);
+Particles particles(4, grid);
 mesh_drawable sphere_particle;
 curve_drawable curve_visual;
 
@@ -179,7 +179,7 @@ void initialize_data()
 	// Set the initial position of the camera
 	// *************************************** //
 
-	vec3 const camera_position = { 0,0,1.0f };        // position of the camera in space
+	vec3 const camera_position = { 0,0,3.0f };        // position of the camera in space
 	vec3 const camera_target_position = {0,0,0}; // position the camera is looking at / point around which the camera rotates
 	vec3 const up = {0,1,0};                     // approximated "up" vector of the camera
 	scene.camera.look_at(camera_position, camera_target_position, up);
@@ -192,7 +192,7 @@ void initialize_data()
 
 	initialize_pic();
 	sphere_particle = mesh_drawable(mesh_primitive_sphere());
-	sphere_particle.transform.scale = 0.01f;
+	sphere_particle.transform.scale = .01f;
 	curve_visual.color = { 1,0,0 };
 	curve_visual = curve_drawable(curve_primitive_circle());
 }
@@ -203,8 +203,9 @@ void display_scene(float time)
 {
 	auto positions = particles.getParticlePositions();
 	if (user.gui.display_particles) {
-		for (size_t k = 0; k < particles.getParticlesCount(); ++k) {
-			vec3 const& p = vec3 (positions[k], 0);
+		for (auto & position : positions) {
+		    std::cout << position[0] << " " << position[1] << std::endl;
+			vec3 const& p = vec3 (position, 0);
 			sphere_particle.transform.translate = p;
 			draw(sphere_particle, scene);
 		}
@@ -212,7 +213,7 @@ void display_scene(float time)
 
 	if (user.gui.display_radius) {
 		curve_visual.transform.scale = 0.12f;  // Influence distance of a particle (size of the kernel), I took the same as SPH for now
-		for (size_t k = 0; k < particles.getParticlesCount(); k += 10) {
+		for (size_t k = 0; k < particles.getParticlesCount(); k++) {
 			curve_visual.transform.translate = vec3(positions[k], 0);
 			draw(curve_visual, scene);
 		}
