@@ -121,10 +121,10 @@ void Particles::step(float dt) {
     moveParticles(dt);
     toGrid();
     updateExternalForces(dt);
-    //grid.updateDistanceField();
-    //grid.interpolateVelocityWithFastSweep();
+    grid.updateDistanceField();
+    grid.interpolateVelocityWithFastSweep();
     grid.updateBoundaries();
-    //grid.divFreeField();
+    grid.divFreeField();
     fromGrid();
 }
 
