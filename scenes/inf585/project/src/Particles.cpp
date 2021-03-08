@@ -7,8 +7,8 @@
 
 Particles::Particles(size_t particlesPerCellCount, const MACGrid &grid) : grid(grid) {
     float cellSize = grid.getCellSize();
-    for (size_t i = 0; i < grid.getYCellNumber(); i++) {
-        for (size_t j = 0; j < grid.getXCellNumber(); j++) {
+    for (size_t i = 1; i < grid.getYCellNumber() - 1; i++) { //last one always border
+        for (size_t j = 1; j < grid.getXCellNumber() - 1; j++) {
             //randomly generate particles per cell
             float xMin = j * cellSize;
             float xMax = static_cast<float>(j + 1) * cellSize;
@@ -121,10 +121,10 @@ void Particles::step(float dt) {
     moveParticles(dt);
     toGrid();
     updateExternalForces(dt);
-    grid.updateDistanceField();
-    grid.interpolateVelocityWithFastSweep();
+    //grid.updateDistanceField();
+    //grid.interpolateVelocityWithFastSweep();
     grid.updateBoundaries();
-    grid.divFreeField();
+    //grid.divFreeField();
     fromGrid();
 }
 
@@ -143,9 +143,10 @@ void Particles::moveParticles(float dt) {
     }
 }
 
-vcl::vec2 Particles::clampPosAccordingToGrid(const vcl::grid_2D<float> &grid, const vcl::vec2 &pos) const{
+vcl::vec2 Particles::clampPosAccordingToGrid(const vcl::grid_2D<float> &grid, const vcl::vec2 &pos) const {
     float cellSize = this->grid.getCellSize();
-    return {std::clamp(pos[0]/cellSize, 0.f, static_cast<float>(grid.dimension[0]-1.001)), // 1.001 is sort of workaround
-            std::clamp(pos[1]/cellSize, 0.f, static_cast<float>(grid.dimension[1]-1.001))};
+    return {std::clamp(pos[0] / cellSize, 0.f,
+                       static_cast<float>(grid.dimension[0] - 1.001)), // 1.001 is sort of workaround
+            std::clamp(pos[1] / cellSize, 0.f, static_cast<float>(grid.dimension[1] - 1.001))};
 
 }

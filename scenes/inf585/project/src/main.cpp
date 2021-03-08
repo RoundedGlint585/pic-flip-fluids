@@ -71,7 +71,7 @@ void update_field_color(MACGrid& grid, Particles& particles);
 // Declaration of Global variables
 // ****************************************** //
 timer_basic timer;
-MACGrid grid(10, 10, 0.1);
+MACGrid grid(5, 5, 0.2);
 mesh_drawable field_quad;
 Particles particles(4, grid);
 mesh_drawable sphere_particle;
