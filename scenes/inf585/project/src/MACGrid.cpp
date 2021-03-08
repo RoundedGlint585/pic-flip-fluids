@@ -198,11 +198,11 @@ void MACGrid::updateBoundaries() {
         cellTypes(cellTypes.dimension[0] - 1, i) = cellType::SOLID_CELL;
     }
 
-    for (size_t i = 0; i < u.dimension[0]; i++) {
-        u(i, 0u) = 0;
-        u(i, 1u) = 0;
-        u(i, u.dimension[1] - 1) = 0;
-        u(i, u.dimension[1] - 2) = 0;
+    for (size_t i = 0; i < u.dimension[1]; i++) {
+        u(0u, i) = 0;
+        u(1u, i) = 0;
+        u(u.dimension[0]-1, i) = 0;
+        u(u.dimension[0]-2, i) = 0;
     }
     for (size_t i = 0; i < v.dimension[0]; i++) {
         v(i, 0u) = 0;
