@@ -129,15 +129,12 @@ int main(int, char* argv[])
 
 		float const dt = 0.005f * timer.scale;
 		simulate(particles, dt);
-		std::cout << "ok 4" << std::endl;
 		
 		// Set the GUI interface (widgets: buttons, checkbox, sliders, etc)
 		display_interface();
-		std::cout << "ok 5" << std::endl;
 
 		// Display the objects of the scene
 		display_scene(timer.t);
-		std::cout << "ok 6" << std::endl;
 
 
 		// Display GUI

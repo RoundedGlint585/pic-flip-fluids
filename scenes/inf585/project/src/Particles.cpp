@@ -118,15 +118,10 @@ void Particles::step(float dt) {
     toGrid();
     updateExternalForces(dt);
     grid.updateDistanceField();
-    std::cout << "ok 3 5" << std::endl;
     grid.interpolateVelocityWithFastSweep();
-    std::cout << "ok 3 6" << std::endl;
     grid.updateBoundaries();
-    std::cout << "ok 3 7" << std::endl;
     grid.divFreeField();
-    std::cout << "ok 3 8" << std::endl;
     fromGrid();
-    std::cout << "ok 3" << std::endl;
 }
 
 void Particles::moveParticles(float dt) {

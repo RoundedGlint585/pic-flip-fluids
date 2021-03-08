@@ -16,6 +16,8 @@ MACGrid::MACGrid(size_t xCellNumber, size_t yCellNumber, float cellSize) : xCell
     density.fill(0);
     cellTypes = vcl::grid_2D<cellType>(xCellNumber, yCellNumber);
     cellTypes.fill(cellType::EMPTY_CELL);
+    distanceField = vcl::grid_2D<float>(xCellNumber, yCellNumber);
+    distanceField.fill(0);
 
     v = vcl::grid_2D<float>(xCellNumber, yCellNumber + 1);
     u = vcl::grid_2D<float>(xCellNumber + 1, yCellNumber);
@@ -220,7 +222,7 @@ vcl::grid_2D<float> MACGrid::getDivergence() const {
             }
         }
     }
-    return vcl::grid_2D<float>();
+    return div;
 }
 
 void
@@ -246,9 +248,14 @@ void MACGrid::divFreeField() {
         }
         set_boundary(q);
     }
-    for (size_t x = 1; x < u.dimension[0] - 1; ++x) {
+
+    for (size_t x = 1; x < u.dimension[0] - 2; ++x) {
         for (size_t y = 1; y < u.dimension[1] - 1; ++y) {
-            u(x, y) = u(x, y) - (q(x + 1, y) - q(x - 1, y));
+            u(x, y) -= (q(x + 1, y) - q(x - 1, y));
+        }
+    }
+    for (size_t x = 1; x < v.dimension[0] - 1; ++x) {
+        for (size_t y = 1; y < v.dimension[1] - 2; ++y) {
             v(x, y) = v(x, y) - (q(x, y + 1) - q(x, y - 1));
         }
     }
