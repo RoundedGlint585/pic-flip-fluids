@@ -39,7 +39,7 @@ std::vector<vcl::vec2> Particles::getParticleVelocities() {
 
 void Particles::toGrid() {
     //to check indexing, looks problematic
-    auto u = grid.getU();
+    auto &u = grid.getU();
     u.fill(0);
 
     vcl::grid_2D<float> weights(grid.getYCellNumber() + 1, grid.getXCellNumber() + 1);
@@ -52,13 +52,13 @@ void Particles::toGrid() {
     }
     for (size_t i = 0; i < u.dimension[0]; i++) {
         for (size_t j = 0; j < u.dimension[1]; j++) {
-            if (u(i, j) > 0) {
+            if (weights(i, j) > 0) {
                 u(i, j) /= weights(i, j);
             }
         }
     }
 
-    auto v = grid.getV();
+    auto &v = grid.getV();
     v.fill(0);
 
     weights.fill(0);
@@ -71,7 +71,7 @@ void Particles::toGrid() {
     }
     for (size_t i = 0; i < v.dimension[0]; i++) {
         for (size_t j = 0; j < v.dimension[1]; j++) {
-            if (v(i, j) > 0) {
+            if (weights(i, j) > 0) {
                 v(i, j) /= weights(i, j);
             }
         }
@@ -84,20 +84,20 @@ void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D
     auto &[yIndex, yOffset] = yCoord;
 
     float coef = (1 - xOffset) * (1 - yOffset);
-    field(yIndex, xIndex) += coef * value;
-    weight(yIndex, xIndex) += coef;
+    field(xIndex, yIndex) += coef * value;
+    weight(xIndex, yIndex) += coef;
 
     coef = xOffset * (1 - yOffset);
-    field(yIndex + 1, xIndex) += coef * value;
-    weight(yIndex + 1, xIndex) += coef;
+    field(xIndex, yIndex + 1) += coef * value;
+    weight(xIndex, yIndex + 1) += coef;
 
     coef = (1 - xOffset) * yOffset;
-    field(yIndex, xIndex + 1) += coef * value;
-    weight(yIndex, xIndex + 1) += coef;
+    field(xIndex + 1, yIndex) += coef * value;
+    weight(xIndex + 1, yIndex) += coef;
 
     coef = xOffset * yOffset;
-    field(yIndex + 1, xIndex + 1) += coef * value;
-    weight(yIndex + 1, xIndex + 1) += coef;
+    field(xIndex + 1, yIndex + 1) += coef * value;
+    weight(xIndex + 1, yIndex + 1) += coef;
 
 }
 
@@ -121,8 +121,8 @@ void Particles::step(float dt) {
     moveParticles(dt);
     toGrid();
     updateExternalForces(dt);
-    grid.updateDistanceField();
-    grid.interpolateVelocityWithFastSweep();
+//    grid.updateDistanceField();
+//    grid.interpolateVelocityWithFastSweep();
     grid.updateBoundaries();
     grid.divFreeField();
     fromGrid();

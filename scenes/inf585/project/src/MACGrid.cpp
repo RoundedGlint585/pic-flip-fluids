@@ -166,8 +166,7 @@ void MACGrid::sweepVertical(size_t iterationCount) {
                     (distanceDeltaI + distanceDeltaJ) < std::numeric_limits<float>::epsilon() ? 0.5 : distanceDeltaI /
                                                                                                       (distanceDeltaI +
                                                                                                        distanceDeltaJ);
-            v(i, j) =
-                    coeff * v(i - di, j) + (1 - coeff) * v(i, j - dj);
+            v(i, j) = coeff * v(i - di, j) + (1 - coeff) * v(i, j - dj);
         }
     };
 
@@ -240,7 +239,7 @@ void MACGrid::divFreeField() {
     auto div = getDivergence();
     // Gauss Seidel
     vcl::grid_2D<float> q = vcl::grid_2D<float>(div.dimension[0], div.dimension[1]);
-    for (size_t k_iter = 0; k_iter < 30; ++k_iter) {
+    for (size_t k_iter = 0; k_iter < 20; ++k_iter) {
         for (size_t x = 1; x < div.dimension[0] - 1; ++x) {
             for (size_t y = 1; y < div.dimension[1] - 1; ++y) {
                 q(x, y) = (q(x + 1, y) + q(x - 1, y) + q(x, y + 1) + q(x, y - 1) - div(x, y)) / 4.0f;
@@ -252,14 +251,14 @@ void MACGrid::divFreeField() {
     for (size_t x = 2; x < u.dimension[0] - 2; ++x) {
         for (size_t y = 1; y < u.dimension[1] - 1; ++y) {
             if (cellTypes(x, y) == FLUID_CELL || cellTypes(x - 1, y) == FLUID_CELL) {
-                u(x, y) = u(x, y) - (q(x, y) - q(x - 1, y));
+                u(x, y) = u(x, y) - (q(x, y) - q(x - 1, y)) / 2.f;
             }
         }
     }
     for (size_t x = 1; x < v.dimension[0] - 1; ++x) {
         for (size_t y = 2; y < v.dimension[1] - 2; ++y) {
             if (cellTypes(x, y) == FLUID_CELL || cellTypes(x, y - 1) == FLUID_CELL) {
-                v(x, y) = v(x, y) - (q(x, y) - q(x, y - 1));
+                v(x, y) = v(x, y) - (q(x, y) - q(x, y - 1)) / 2.f;
             }
 
         }
