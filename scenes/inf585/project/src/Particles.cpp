@@ -45,14 +45,14 @@ void Particles::toGrid() {
     vcl::grid_2D<float> weights(grid.getYCellNumber() + 1, grid.getXCellNumber() + 1);
     weights.fill(0);
     for (size_t i = 0; i < positions.size(); i++) {
-        auto &[x,y] = positions[i];
+        auto &[x, y] = positions[i];
         auto xCoord = grid.barycentricOnX(x);
         auto yCoord = grid.barycentricOnY(y);
         addPointToInterpolation(u, weights, velocities[i][0], xCoord, yCoord);
     }
-    for(size_t i = 0; i < u.dimension[0]; i++){
-        for(size_t j = 0; j < u.dimension[1]; j++){
-            if(u(i, j) > 0){
+    for (size_t i = 0; i < u.dimension[0]; i++) {
+        for (size_t j = 0; j < u.dimension[1]; j++) {
+            if (u(i, j) > 0) {
                 u(i, j) /= weights(i, j);
             }
         }
@@ -64,21 +64,22 @@ void Particles::toGrid() {
     weights.fill(0);
 
     for (size_t i = 0; i < positions.size(); i++) {
-        auto &[x,y] = positions[i];
+        auto &[x, y] = positions[i];
         auto xCoord = grid.barycentricOnX(x);
         auto yCoord = grid.barycentricOnY(y);
         addPointToInterpolation(v, weights, velocities[i][1], xCoord, yCoord);
     }
-    for(size_t i = 0; i < v.dimension[0]; i++){
-        for(size_t j = 0; j < v.dimension[1]; j++){
-            if(v(i, j) > 0){
+    for (size_t i = 0; i < v.dimension[0]; i++) {
+        for (size_t j = 0; j < v.dimension[1]; j++) {
+            if (v(i, j) > 0) {
                 v(i, j) /= weights(i, j);
             }
         }
     }
 }
 
-void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D<float> &weight, float value, barycentricCoordinate xCoord, barycentricCoordinate yCoord) const {
+void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D<float> &weight, float value,
+                                        barycentricCoordinate xCoord, barycentricCoordinate yCoord) const {
     auto &[xIndex, xOffset] = xCoord;
     auto &[yIndex, yOffset] = yCoord;
 
@@ -91,11 +92,11 @@ void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D
     weight(yIndex + 1, xIndex) += coef;
 
     coef = (1 - xOffset) * yOffset;
-    field(yIndex, xIndex+1) += coef * value;
+    field(yIndex, xIndex + 1) += coef * value;
     weight(yIndex, xIndex + 1) += coef;
 
     coef = xOffset * yOffset;
-    field(yIndex + 1, xIndex+1) += coef * value;
+    field(yIndex + 1, xIndex + 1) += coef * value;
     weight(yIndex + 1, xIndex + 1) += coef;
 
 }
@@ -106,7 +107,7 @@ void Particles::updateExternalForces(float dt) {
 }
 
 void Particles::fromGrid() {
-    for(size_t i = 0; i < positions.size(); i++){
+    for (size_t i = 0; i < positions.size(); i++) {
         float u = vcl::interpolation_bilinear(grid.getU(), positions[i][0], positions[i][1]);
         float v = vcl::interpolation_bilinear(grid.getV(), positions[i][0], positions[i][1]);
         velocities[i] = {u, v}; //PIC step
@@ -115,34 +116,24 @@ void Particles::fromGrid() {
 
 void Particles::step(float dt) {
     moveParticles(dt);
-    toGrid();
+//    toGrid();
     updateExternalForces(dt);
-    grid.updateDistanceField();
-    grid.interpolateVelocityWithFastSweep();
-    grid.updateBoundaries();
-    grid.divFreeField();
-    fromGrid();
+//    grid.updateDistanceField();
+//    grid.interpolateVelocityWithFastSweep();
+//    grid.updateBoundaries();
+//    grid.divFreeField();
+//    fromGrid();
 }
 
 void Particles::moveParticles(float dt) {
-    for(auto & position : positions){
-        auto tmp = position;
-        tmp[0] < 0 ? tmp[0] = 0.0f : tmp[0];
-        tmp[0] + 1 >= grid.getU().dimension.x ? tmp[0] = grid.getU().dimension.x - 2 : tmp[0];
-        tmp[1] < 0 ? tmp[1] = 0.0f : tmp[1];
-        tmp[1] + 1 >= grid.getU().dimension.y ? tmp[1] = grid.getU().dimension.y - 2 : tmp[1];
-        position = tmp;
+    for (auto &position : positions) {
+        position[0] = std::clamp(position[0], 0.f, (grid.getU().dimension.x - 2) * grid.getCellSize());
+        position[1] = std::clamp(position[1], 0.f, (grid.getU().dimension.y - 2) * grid.getCellSize());
         float u = vcl::interpolation_bilinear(grid.getU(), position[0], position[1]);
-        tmp = position;
-        tmp[0] < 0 ? tmp[0] = 0.0f : tmp[0];
-        tmp[0] + 1 >= grid.getV().dimension.x ? tmp[0] = grid.getV().dimension.x - 2 : tmp[0];
-        tmp[1] < 0 ? tmp[1] = 0.0f : tmp[1];
-        tmp[1] + 1 >= grid.getV().dimension.y ? tmp[1] = grid.getV().dimension.y - 2 : tmp[1];
-        position = tmp;
         float v = vcl::interpolation_bilinear(grid.getV(), position[0], position[1]);
-        vcl::vec2 firstStep = position + 0.5f * dt * vcl::vec2{u,v};
+        vcl::vec2 firstStep = position + 0.5f * dt * vcl::vec2{u, v};
         u = vcl::interpolation_bilinear(grid.getU(), firstStep.x, firstStep.y);
         v = vcl::interpolation_bilinear(grid.getV(), firstStep.x, firstStep.y);
-        position += dt * vcl::vec2{ u,v };
+        position += dt * vcl::vec2{u, v};
     }
 }
