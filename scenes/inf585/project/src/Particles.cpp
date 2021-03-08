@@ -22,6 +22,19 @@ Particles::Particles(size_t particlesPerCellCount, const MACGrid &grid) : grid(g
         }
     }
     this->grid.getCellTypes().fill(cellType::FLUID_CELL);
+    this->particlesCount = particlesPerCellCount * grid.getXCellNumber() * grid.getYCellNumber();
+}
+
+size_t Particles::getParticlesCount() {
+    return particlesCount;
+}
+
+std::vector<vcl::vec2> Particles::getParticlePositions() {
+    return positions;
+}
+
+std::vector<vcl::vec2> Particles::getParticleVelocities() {
+    return velocities;
 }
 
 void Particles::toGrid() {

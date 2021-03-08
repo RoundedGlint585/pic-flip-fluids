@@ -5,6 +5,7 @@
 
 #include "vcl/vcl.hpp"
 #include <iostream>
+#include "simulation.h"
 
 
 // Add vcl namespace within the current one - Allows to use function from vcl library without explicitely preceeding their name with vcl::
@@ -19,18 +20,20 @@ using namespace vcl;
 
 // Structure storing the variables used in the GUI interface
 struct gui_parameters {
-	bool display_frame = true; // Display a frame representing the coordinate system
+	bool display_color = true;
+	bool display_particles = true;
+	bool display_radius = false;
 };
 
 
 // Structure storing user-related interaction data and GUI parameter
 struct user_interaction_parameters {
-	vec2 mouse_prev;     // Current position of the mouse
-	bool cursor_on_gui;  // Indicate if the cursor is on the GUI widget
-	gui_parameters gui;  // The gui structure
+	vec2 mouse_prev;
+	timer_fps fps_record;
+	gui_parameters gui;
+	bool cursor_on_gui;
 };
-user_interaction_parameters user; // (declaration of user as a global variable)
-
+user_interaction_parameters user;
 
 // Structure storing the global variable of the 3D scene
 //   can be use to send uniform parameter when displaying a shape
@@ -50,28 +53,29 @@ scene_environment scene;  // (declaration of scene as a global variable)
 // Callback functions
 //   Functions called when a corresponding event is received by GLFW (mouse move, keyboard, etc).
 void mouse_move_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods);
 void window_size_callback(GLFWwindow* window, int width, int height);
 
 // Specific functions:
 //    Initialize the data of this scene - executed once before the start of the animation loop.
-void initialize_data();                      
+void initialize_data();   
+void display_interface();
 //    Display calls - executed a each frame
 void display_scene(float current_time);
 //    Display the GUI widgets
-void display_interface();
+void update_field_color(MACGrid& grid, Particles& particles);
+
 
 
 // ****************************************** //
 // Declaration of Global variables
 // ****************************************** //
-
-mesh_drawable global_frame;
-mesh_drawable cube;
-mesh_drawable ground;
-mesh_drawable cylinder;
-curve_drawable curve;
-
 timer_basic timer;
+MACGrid grid;
+mesh_drawable field_quad;
+Particles particles(1, grid);
+mesh_drawable sphere_particle;
+curve_drawable curve_visual;
 
 
 // ****************************************** //
@@ -94,16 +98,19 @@ int main(int, char* argv[])
 	// Set GLFW callback functions
 	glfwSetCursorPosCallback(window, mouse_move_callback); 
 	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetMouseButtonCallback(window, mouse_click_callback);
 	
 	std::cout<<"Initialize data ..."<<std::endl;
 	initialize_data();
 
 	std::cout<<"Start animation loop ..."<<std::endl;
+	user.fps_record.start();
 	timer.start();
 	glEnable(GL_DEPTH_TEST);
 	while (!glfwWindowShouldClose(window))
 	{
 		scene.light = scene.camera.position();
+		user.fps_record.update();
 		timer.update(); // update the time at this current frame
 
 		// Clear screen
@@ -113,8 +120,15 @@ int main(int, char* argv[])
 
 		// Create GUI interface for the current frame
 		imgui_create_frame();
+		if (user.fps_record.event) {
+			std::string const title = "VCL Display - " + str(user.fps_record.fps) + " fps";
+			glfwSetWindowTitle(window, title.c_str());
+		}
 		ImGui::Begin("GUI",NULL,ImGuiWindowFlags_AlwaysAutoResize);
 		user.cursor_on_gui = ImGui::IsAnyWindowFocused();
+
+		float const dt = 0.005f * timer.scale;
+		simulate(particles, dt);
 		
 		// Set the GUI interface (widgets: buttons, checkbox, sliders, etc)
 		display_interface();
@@ -140,6 +154,11 @@ int main(int, char* argv[])
 	return 0;
 }
 
+void initialize_pic() {
+	//
+
+}
+
 void initialize_data()
 {
 	// Load and set the common shaders
@@ -148,115 +167,77 @@ void initialize_data()
 	//   - Shader used to display meshes
 	GLuint const shader_mesh = opengl_create_shader_program(opengl_shader_preset("mesh_vertex"), opengl_shader_preset("mesh_fragment"));
 	//   - Shader used to display constant color (ex. for curves)
-	GLuint const shader_single_color = opengl_create_shader_program(opengl_shader_preset("single_color_vertex"), opengl_shader_preset("single_color_fragment"));
+	GLuint const shader_uniform_color = opengl_create_shader_program(opengl_shader_preset("single_color_vertex"), opengl_shader_preset("single_color_fragment"));
 	//   - Default white texture
 	GLuint const texture_white = opengl_texture_to_gpu(image_raw{1,1,image_color_type::rgba,{255,255,255,255}});
 
 	// Set default shader and texture to drawable mesh
 	mesh_drawable::default_shader = shader_mesh;
 	mesh_drawable::default_texture = texture_white;
-	curve_drawable::default_shader = shader_single_color;
+	curve_drawable::default_shader = shader_uniform_color;
+	segments_drawable::default_shader = shader_uniform_color;
 
 	// Set the initial position of the camera
 	// *************************************** //
 
-	vec3 const camera_position = {2.0f, -3.5f, 2.0f};        // position of the camera in space
+	vec3 const camera_position = { 0,0,1.0f };        // position of the camera in space
 	vec3 const camera_target_position = {0,0,0}; // position the camera is looking at / point around which the camera rotates
 	vec3 const up = {0,0,1};                     // approximated "up" vector of the camera
 	scene.camera.look_at(camera_position, camera_target_position, up); 
 
 	// Prepare the objects visible in the scene
 	// *************************************** //
+	field_quad = mesh_drawable(mesh_primitive_quadrangle({ -1,-1,0 }, { 1,-1,0 }, { 1,1,0 }, { -1,1,0 }));
+	field_quad.shading.phong = { 1,0,0 };
+	// field_quad.texture = opengl_texture_to_gpu(grid.getDensity);
 
-	// Create a visual frame representing the coordinate system
-	global_frame = mesh_drawable(mesh_primitive_frame());
-
-	// Create a cube as a mesh
-	mesh const cube_mesh = mesh_primitive_cube(/*center*/{0,0,0}, /*edge length*/ 1.0f);
-	// Create a mesh drawable from a mesh structure
-	//   - mesh : store buffer of data (vertices, indices, etc) on the CPU. The mesh structure is convenient to manipulate in the C++ code but cannot be displayed (data is not on GPU).
-	//   - mesh_drawable : store VBO associated to elements on the GPU + associated uniform parameters. A mesh_drawable can be displayed using the function draw(mesh_drawable, scene). It only stores the indices of the buffers on the GPU - the buffer of data cannot be directly accessed in the C++ code through a mesh_drawable.
-	//   Note: a mesh_drawable can be created from a mesh structure in calling explicitely the constructor mesh_drawable(mesh)
-	cube = mesh_drawable(cube_mesh);  // note: cube is a mesh_drawable declared as a global variable
-	cube.shading.color = {1,1,0};     // set the color of the cube (R,G,B) - sent as uniform parameter to the shader when display is called
-
-	// Create the ground plane
-	ground  = mesh_drawable(mesh_primitive_quadrangle({-2,-2,-1},{ 2,-2,-1},{ 2, 2,-1},{-2, 2,-1}));
-
-	// Create the cylinder
-	cylinder = mesh_drawable(mesh_primitive_cylinder(/*radius*/ 0.2f, /*first extremity*/ {0,-1,0}, /*second extremity*/{0,1,0}));
-	cylinder.shading.color = {0.8f,0.8f,1};
-
-	// Create a parametric curve
-    // **************************************** //
-	buffer<vec3> curve_positions;   // the basic structure of a curve is a vector of vec3
-	size_t const N_curve = 150;     // Number of samples of the curve
-    for(size_t k=0; k<N_curve; ++k)
-    {
-        const float u = k/(N_curve-1.0f); // u \in [0,1]
-
-        // curve oscillating as a cosine
-        const float x = 0;
-        const float y = 4.0f * (u - 0.5f);
-        const float z = 0.1f * std::cos(u*16*3.14f);
-
-        curve_positions.push_back({x,y,z});
-    }
-    // send data to GPU and store it into a curve_drawable structure
-    curve = curve_drawable(curve_positions);
-	curve.color = {0,1,0};
-
+	initialize_pic();
+	sphere_particle = mesh_drawable(mesh_primitive_sphere());
+	sphere_particle.transform.scale = 0.01f;
+	curve_visual.color = { 1,0,0 };
+	curve_visual = curve_drawable(curve_primitive_circle());
 }
 
 
 
 void display_scene(float time)
 {
-	// the general syntax to display a mesh is:
-    //   draw(objectDrawableName, scene);
-	//     Note: scene is used to set the uniform parameters associated to the camera, light, etc. to the shader
-	draw(ground, scene);
+	auto positions = particles.getParticlePositions();
+	if (user.gui.display_particles) {
+		for (size_t k = 0; k < particles.getParticlesCount(); ++k) {
+			vec3 const& p = vec3 (positions[k], 0);
+			sphere_particle.transform.translate = p;
+			draw(sphere_particle, scene);
+		}
+	}
 
+	if (user.gui.display_radius) {
+		curve_visual.transform.scale = 0.12f;  // Influence distance of a particle (size of the kernel), I took the same as SPH for now
+		for (size_t k = 0; k < particles.getParticlesCount(); k += 10) {
+			curve_visual.transform.translate = vec3(positions[k], 0);
+			draw(curve_visual, scene);
+		}
+	}
 
-	if(user.gui.display_frame) // conditional display of the global frame (set via the GUI)
-		draw(global_frame, scene);
-
-	// Display cylinder
-    // ********************************************* //
-
-
-	// Cylinder rotated around the axis (1,0,0), by an angle = time/2
-	vec3 const axis_of_rotation = {1,0,0};
-	float const angle_of_rotation = time/2.0f;
-	rotation const rotation_cylinder = rotation(axis_of_rotation, angle_of_rotation);
-
-	// Set translation and rotation parameters (send and used in shaders using uniform variables)
-	cylinder.transform.rotate = rotation_cylinder;
-	cylinder.transform.translate = {1.5f,0,0};
-	draw(cylinder, scene); // Display of the cylinder
-
-	// Meshes can also be displayed as wireframe using the specific draw_wireframe call
-	draw_wireframe(cylinder, scene, /*color of the wireframe*/ {1,0.3f,0.3f} );
-	
-	// Display cube
-    // ********************************************* //
-
-	cube.transform.rotate = rotation({0,0,1},std::sin(3*time));
-    cube.transform.translate = {-1,0,0};
-    draw(cube, scene);
-
-    curve.transform.translate = {1.9f,0,0};
-    curve.transform.rotate = rotation({0,1,0},time);
-	draw(curve, scene);
-	
-	
+	if (user.gui.display_color) {
+		update_field_color(grid, particles);
+		// opengl_update_texture_gpu(field_quad.texture, grid);
+		draw(field_quad, scene);
+	}
 }
 
 // Display the GUI
 void display_interface()
 {
-	ImGui::Checkbox("Display frame", &user.gui.display_frame);
-	ImGui::SliderFloat("Time Scale", &timer.scale, 0.0f, 2.0f, "%.1f");
+	ImGui::SliderFloat("Timer scale", &timer.scale, 0.01f, 4.0f, "%0.2f");
+
+	bool const restart = ImGui::Button("Restart");
+	if (restart)
+		initialize_pic();
+
+	ImGui::Checkbox("Color", &user.gui.display_color);
+	ImGui::Checkbox("Particles", &user.gui.display_particles);
+	ImGui::Checkbox("Radius", &user.gui.display_radius);
 
 }
 
@@ -296,6 +277,11 @@ void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 	user.mouse_prev = p1;
 }
 
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	ImGui::SetWindowFocus(nullptr);
+}
+
 // Uniform data used when displaying an object in this scene
 void opengl_uniform(GLuint shader, scene_environment const& current_scene)
 {
@@ -304,5 +290,23 @@ void opengl_uniform(GLuint shader, scene_environment const& current_scene)
 	opengl_uniform(shader, "light", scene.light, false);
 }
 
-
+void update_field_color(MACGrid& grid, Particles& particles)
+{
+	// field.fill({ 1,1,1 });
+	float const d = 0.1f;
+	int Nf = grid.getXCellNumber();
+	for (int kx = 0; kx < Nf; ++kx) {
+		for (int ky = 0; ky < grid.getYCellNumber(); ++ky) {
+			float f = 0.0f;
+			vec3 const p0 = { 2.0f * (kx / (Nf - 1.0f) - 0.5f), 2.0f * (ky / (Nf - 1.0f) - 0.5f), 0.0f };
+			auto positions = particles.getParticlePositions();
+			for (size_t k = 0; k < particles.getParticlesCount(); ++k) {
+				vec3 const& pi = vec3(positions[k], 0.0f);
+				float const r = norm(pi - p0) / d;
+				f += 0.25f * std::exp(-r * r);
+			}
+			// field(kx, Nf - 1 - ky) = vec3(clamp(1 - f, 0, 1), clamp(1 - f, 0, 1), 1);
+		}
+	}
+}
 

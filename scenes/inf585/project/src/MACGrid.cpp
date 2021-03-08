@@ -62,8 +62,12 @@ vcl::grid_2D<float> &MACGrid::getU() {
     return u;
 }
 
-vcl::grid_2D<float> &MACGrid::getV() {
+vcl::grid_2D<float>& MACGrid::getV() {
     return v;
+}
+
+vcl::grid_2D<float>& MACGrid::getDensity() {
+    return density;
 }
 
 vcl::grid_2D<cellType> &MACGrid::getCellTypes() {

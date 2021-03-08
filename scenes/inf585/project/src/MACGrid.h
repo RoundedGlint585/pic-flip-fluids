@@ -21,12 +21,13 @@ enum cellType{
 };
 class MACGrid {
 public:
-    MACGrid(size_t xCellNumber, size_t yCellNumber, float cellSize);
+    MACGrid(size_t xCellNumber=30, size_t yCellNumber=30, float cellSize=2);
     size_t getXCellNumber() const;
     size_t getYCellNumber() const;
     float getCellSize() const;
     vcl::grid_2D<float>& getU();
     vcl::grid_2D<float>& getV();
+    vcl::grid_2D<float>& getDensity();
     vcl::grid_2D<cellType> &getCellTypes();
 
     barycentricCoordinate barycentricOnXUnsafe(float x) const;

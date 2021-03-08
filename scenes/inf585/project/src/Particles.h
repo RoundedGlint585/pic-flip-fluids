@@ -11,6 +11,10 @@ public:
     Particles(size_t particlesPerCellCount, const MACGrid &grid);
 
     void step(float dt);
+    size_t getParticlesCount();
+    std::vector<vcl::vec2> getParticlePositions();
+    std::vector<vcl::vec2> getParticleVelocities();
+
 private:
     MACGrid grid;
     size_t particlesCount;
