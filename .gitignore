@@ -1,6 +1,6 @@
 # build repos
-cmake-build-debug/
-build/
+scenes/inf585/project/cmake-build-debug/
+scenes/inf585/project/build/
 
 # Prerequisites
 *.d

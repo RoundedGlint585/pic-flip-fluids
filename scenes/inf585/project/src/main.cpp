@@ -137,7 +137,6 @@ int main(int, char* argv[])
 		// Display the objects of the scene
 		display_scene(timer.t);
 
-
 		// Display GUI
 		ImGui::End();
 		imgui_render_frame(window);
