@@ -65,6 +65,20 @@ void set_boundary_reflective(vcl::grid_2D<T>& grid)
     }
 
 }
+template <>
+void set_boundary_reflective(vcl::grid_2D<float>& grid)
+{
+    set_boundary(grid);
+    int const Nx = int(grid.dimension[0]);
+    int const Ny = int(grid.dimension[1]);
+
+    for(int  x=1; x<Nx-1; ++x) {
+        grid(x,0) *= -1.0f;
+        grid(x,1) *= -1.0f;
+        grid(x,Ny-1) *= -1.0f;
+        grid(x,Ny-2) *= -1.0f;
+    }
+}
 
 
 #endif //PROJECT_BOUNDARIES_H

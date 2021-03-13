@@ -5,8 +5,7 @@
 
 #include "vcl/vcl.hpp"
 #include <iostream>
-#include "simulation.h"
-
+#include "Particles.h"
 
 // Add vcl namespace within the current one - Allows to use function from vcl library without explicitely preceeding their name with vcl::
 using namespace vcl;
@@ -71,11 +70,12 @@ void update_field_color(MACGrid& grid, Particles& particles);
 // Declaration of Global variables
 // ****************************************** //
 timer_basic timer;
-MACGrid grid(10, 10, 0.1);
+MACGrid grid(25, 25, 0.04);
 mesh_drawable field_quad;
-Particles particles(8, grid);
+Particles particles(4, grid);
 mesh_drawable sphere_particle;
 curve_drawable curve_visual;
+mesh_drawable box;
 
 
 // ****************************************** //
@@ -127,7 +127,8 @@ int main(int, char* argv[])
 		ImGui::Begin("GUI",NULL,ImGuiWindowFlags_AlwaysAutoResize);
 		user.cursor_on_gui = ImGui::IsAnyWindowFocused();
 
-		float const dt = 0.005f * timer.scale;
+		float dt = 0.02f * timer.scale;
+        //dt = grid.CFL()/3;
 		particles.step(dt);
 		
 		// Set the GUI interface (widgets: buttons, checkbox, sliders, etc)
@@ -193,6 +194,7 @@ void initialize_data()
 	initialize_pic();
 	sphere_particle = mesh_drawable(mesh_primitive_sphere());
 	sphere_particle.transform.scale = .01f;
+	box = mesh_drawable(mesh_primitive_grid());
 	curve_visual.color = { 1,0,0 };
 	curve_visual = curve_drawable(curve_primitive_circle());
 }
@@ -207,12 +209,13 @@ void display_scene(float time)
 			vec3 const& p = vec3 (position, 0);
 			sphere_particle.transform.translate = p;
 			draw(sphere_particle, scene);
+			draw(box, scene);
 		}
 	}
 
 	if (user.gui.display_radius) {
 		curve_visual.transform.scale = 0.12f;  // Influence distance of a particle (size of the kernel), I took the same as SPH for now
-		for (size_t k = 0; k < particles.getParticlesCount(); k++) {
+		for (size_t k = 0; k < particles.getParticlePositions().size(); k++) {
 			curve_visual.transform.translate = vec3(positions[k], 0);
 			draw(curve_visual, scene);
 		}
@@ -293,13 +296,13 @@ void update_field_color(MACGrid& grid, Particles& particles)
 {
 	// field.fill({ 1,1,1 });
 	float const d = 0.1f;
-	int Nf = grid.getXCellNumber();
+	int Nf = grid.xCellCount;
 	for (int kx = 0; kx < Nf; ++kx) {
-		for (int ky = 0; ky < grid.getYCellNumber(); ++ky) {
+		for (int ky = 0; ky < grid.yCellCount; ++ky) {
 			float f = 0.0f;
 			vec3 const p0 = { 2.0f * (kx / (Nf - 1.0f) - 0.5f), 2.0f * (ky / (Nf - 1.0f) - 0.5f), 0.0f };
 			auto positions = particles.getParticlePositions();
-			for (size_t k = 0; k < particles.getParticlesCount(); ++k) {
+			for (size_t k = 0; k < particles.getParticlePositions().size(); ++k) {
 				vec3 const& pi = vec3(positions[k], 0.0f);
 				float const r = norm(pi - p0) / d;
 				f += 0.25f * std::exp(-r * r);

@@ -4,28 +4,35 @@
 
 #ifndef PROJECT_PARTICLES_H
 #define PROJECT_PARTICLES_H
+
 #include "MACGrid.h"
 
 class Particles {
 public:
-    Particles(size_t particlesPerCellCount, const MACGrid &grid);
+
+    Particles(size_t particlesPerCellCount, const MACGrid &grid_);
 
     void step(float dt);
-    size_t getParticlesCount();
+
     std::vector<vcl::vec2> getParticlePositions();
+
     std::vector<vcl::vec2> getParticleVelocities();
 
 private:
     MACGrid grid;
-    size_t particlesCount;
-    std::vector<vcl::vec2> positions, velocities;
+    std::vector<vcl::vec2> positions, velocities; // positions and velocities
 
-    void toGrid(); // update grid velocity based on particles around
-    void updateExternalForces(float dt); // for now only gravity
-    void fromGrid();
-    void addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D<float> &weight, float value, barycentricCoordinate xCoord, barycentricCoordinate yCoord) const;
-    void moveParticles(float dt);
+    void addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D<float> &weight, float value,
+                                 barycentricCoords xCoord, barycentricCoords yCoord) const;
+
     vcl::vec2 clampPosAccordingToGrid(const vcl::grid_2D<float> &grid, const vcl::vec2 &pos) const;
+
+    void toGrid();
+
+    void fromGrid();
+
+    void moveParticles(float dt);
+
 };
 
 
