@@ -85,7 +85,7 @@ void Particles::fromGrid() {
         float v = vcl::interpolation_bilinear(grid.v, positionIndexed.x, positionIndexed.y);
         float dv = vcl::interpolation_bilinear(grid.dv, positionIndexed.x, positionIndexed.y);
         velocities[i] = 1 * vcl::vec2{u, v}; //PIC step
-        velocities[i] += 1 * vcl::vec2{du, dv};
+        velocities[i] += 1 * vcl::vec2{du, dv}; //FLIP step
     }
 }
 
@@ -127,9 +127,12 @@ void Particles::addPointToInterpolation(vcl::grid_2D<float> &field, vcl::grid_2D
 }
 
 vcl::vec2 Particles::clampPosAccordingToGrid(const vcl::grid_2D<float> &grid, const vcl::vec2 &pos) const {
-    return {std::clamp(pos[0] / this->grid.cellSize, 0.001f,
-                       static_cast<float>(grid.dimension[0] - 1.001)), // 1.001 is sort of workaround
-            std::clamp(pos[1] / this->grid.cellSize, 0.001f, static_cast<float>(grid.dimension[1] - 1.001))};
+    //sry for magical number, if it will crash here just increase smallFloat or change to 1.0001
+    constexpr float smallFloat = 10 * std::numeric_limits<float>::epsilon();
+    return {std::clamp(pos[0] / this->grid.cellSize, smallFloat,
+                       static_cast<float>(grid.dimension[0] - (1.f + smallFloat))),
+            std::clamp(pos[1] / this->grid.cellSize, smallFloat,
+                       static_cast<float>(grid.dimension[1] - (1.f + smallFloat)))};
 
 }
 
