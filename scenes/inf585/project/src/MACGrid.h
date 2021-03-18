@@ -38,13 +38,13 @@ struct MACGrid{
 private:
     void saveFlipVelocities();
     void updateExternalForces(float dt);
-    void updateDistanceField();
-    void interpolateVelocities();
+    void updateDistanceField(size_t iterationCount);
+    void interpolateVelocities(size_t iterationCount);
     void divFreeField();
     void updateVelocities();
 
-    void sweepU();
-    void sweepV();
+    void sweepU(size_t iterationCount);
+    void sweepV(size_t iterationCount);
     void calculateDiv();
     // this shit is tricky, i don't want to fix every part of fast sweeping, so this thing should do for in for and apply function
     // based on i, j, di, dj, basically just sent lambda
