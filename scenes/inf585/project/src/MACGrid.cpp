@@ -162,14 +162,7 @@ void MACGrid::sweepU(size_t iterationCount) {
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, 1, distanceField.dimension[1], updateFunc);
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, static_cast<int>(distanceField.dimension[1] - 2), 0, updateFunc);
     }
-    for (size_t i = 0; i < u.dimension[0]; i++) {
-        u(i, 0u) = u(i, 1u);
-        u(i, u.dimension[1] - 1) = u(i, u.dimension[1] - 2);
-    }
-    for (size_t i = 0; i < u.dimension[1]; i++) {
-        u(0u, i) = u(1u, i);
-        u(u.dimension[0] - 1, i) = u(u.dimension[0] - 2, i);
-    }
+    set_boundary(u);
 }
 
 void MACGrid::sweepV(size_t iterationCount) {
@@ -200,14 +193,7 @@ void MACGrid::sweepV(size_t iterationCount) {
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, static_cast<int>(distanceField.dimension[1] - 2), 0, updateFunc);
     }
 
-    for (size_t i = 0; i < v.dimension[0]; i++) {
-        v(i, 0u) = v(i, 1u);
-        v(i, v.dimension[1] - 1) = v(i, v.dimension[1] - 2);
-    }
-    for (size_t i = 0; i < v.dimension[1]; i++) {
-        v(0u, i) = v(1u, i);
-        v(v.dimension[0] - 1, i) = v(v.dimension[0] - 2, i);
-    }
+    set_boundary(v);
 }
 
 void MACGrid::calculateDiv() {
