@@ -30,7 +30,7 @@ void MACGrid::updateExternalForces(float dt) {
     v -= dt * g;
 }
 
-void MACGrid::updateDistanceField() {
+void MACGrid::updateDistanceField(size_t iterationCount) {
 
     distanceField.fill(std::numeric_limits<float>::max());
     for (size_t j = 1; j < distanceField.dimension.y - 1; j++) {
@@ -51,7 +51,7 @@ void MACGrid::updateDistanceField() {
             distanceField(i, j) = std::min(distanceField(i, j), initDistance);
         }
     };
-    for (size_t i = 0; i < 4; ++i) {
+    for (size_t i = 0; i < iterationCount; ++i) {
         performSweep(1, distanceField.dimension[0], 1, distanceField.dimension[1], updateFunc);
         performSweep(1, distanceField.dimension[0], static_cast<int>(distanceField.dimension[1] - 2), 0, updateFunc);
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, 1, distanceField.dimension[1], updateFunc);
@@ -59,9 +59,9 @@ void MACGrid::updateDistanceField() {
     }
 }
 
-void MACGrid::interpolateVelocities() {
-    sweepU();
-    sweepV();
+void MACGrid::interpolateVelocities(size_t iterationCount) {
+    sweepU(iterationCount);
+    sweepV(iterationCount);
 }
 
 void MACGrid::updateBoundaries() {
@@ -131,7 +131,7 @@ void MACGrid::updateVelocities() {
     dv = v - dv;
 }
 
-void MACGrid::sweepU() {
+void MACGrid::sweepU(size_t iterationCount) {
     auto updateFunc = [this](int i, int j, int di, int dj) {
         if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i - 1, j) == cellType::EMPTY_CELL) {
             float distanceDeltaI = distanceField(i, j) - distanceField(i - di, j);
@@ -143,7 +143,7 @@ void MACGrid::sweepU() {
                 return;
             }
             float coeff;
-            if (distanceDeltaI + distanceDeltaJ == 0) {
+            if (std::abs(distanceDeltaI + distanceDeltaJ) < std::numeric_limits<float>::epsilon()) {
                 coeff = 0.5;
             } else {
                 coeff = distanceDeltaI / (distanceDeltaI + distanceDeltaJ);
@@ -152,7 +152,7 @@ void MACGrid::sweepU() {
         }
     };
 
-    for (size_t k = 0; k < 4; k++) {
+    for (size_t k = 0; k < iterationCount; k++) {
         performSweep(1, distanceField.dimension[0], 1, distanceField.dimension[1], updateFunc);
         performSweep(1, distanceField.dimension[0], static_cast<int>(distanceField.dimension[1] - 2), 0, updateFunc);
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, 1, distanceField.dimension[1], updateFunc);
@@ -168,7 +168,7 @@ void MACGrid::sweepU() {
     }
 }
 
-void MACGrid::sweepV() {
+void MACGrid::sweepV(size_t iterationCount) {
     auto updateFunc = [this](int i, int j, int di, int dj) {
         if (cellTypes(i, j) == cellType::EMPTY_CELL && cellTypes(i, j - 1) == cellType::EMPTY_CELL) {
             float distanceDeltaI = distanceField(i, j) - distanceField(i, j - dj);
@@ -180,7 +180,7 @@ void MACGrid::sweepV() {
                 return;
             }
             float coeff;
-            if (distanceDeltaI + distanceDeltaJ == 0) {
+            if (std::abs(distanceDeltaI + distanceDeltaJ) < std::numeric_limits<float>::epsilon()) {
                 coeff = 0.5;
             } else {
                 coeff = distanceDeltaJ / (distanceDeltaI + distanceDeltaJ);
@@ -189,7 +189,7 @@ void MACGrid::sweepV() {
         }
     };
 
-    for (size_t k = 0; k < 2; k++) {
+    for (size_t k = 0; k < iterationCount; k++) {
         performSweep(1, distanceField.dimension[0], 1, distanceField.dimension[1], updateFunc);
         performSweep(1, distanceField.dimension[0], static_cast<int>(distanceField.dimension[1] - 2), 0, updateFunc);
         performSweep(static_cast<int>(distanceField.dimension[0] - 2), 0, 1, distanceField.dimension[1], updateFunc);
@@ -256,11 +256,11 @@ barycentricCoords MACGrid::barycentricOnX(float x) const {
 void MACGrid::update(float dt) {
     saveFlipVelocities();
     updateExternalForces(dt);
-    updateDistanceField();
-    interpolateVelocities();
+    updateDistanceField(4);
+    interpolateVelocities(4);
     updateBoundaries();
     divFreeField();
-    interpolateVelocities();
+    interpolateVelocities(4);
     updateVelocities();
 }
 
