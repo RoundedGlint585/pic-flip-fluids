@@ -119,7 +119,7 @@ void MACGrid::divFreeField() {
     for (size_t x = 1; x < v.dimension[0] - 1; x++) {
         for (size_t y = 2; y < v.dimension[1] - 2; y++) {
             if ((cellTypes(x, y) == FLUID_CELL && cellTypes(x, y - 1) != SOLID_CELL) ||
-                (cellTypes(x, y) != SOLID_CELL && cellTypes(x, y - 1) == FLUID_CELL)) {
+                 (cellTypes(x, y) != SOLID_CELL && cellTypes(x, y - 1) == FLUID_CELL)) {
                 v(x, y) = v(x, y) - (q(x, y) - q(x, y - 1));
             }
 
@@ -146,11 +146,9 @@ void MACGrid::sweepU(size_t iterationCount) {
             if (distanceDeltaJ < 0) {
                 return;
             }
-            float coeff;
-            if (std::abs(distanceDeltaI + distanceDeltaJ) < std::numeric_limits<float>::epsilon()) {
-                coeff = 0.5;
-            } else {
-                coeff = distanceDeltaI / (distanceDeltaI + distanceDeltaJ);
+            float coeff = 0.5f;
+            if (std::abs(distanceDeltaI + distanceDeltaJ) > std::numeric_limits<float>::epsilon()) {
+                coeff = distanceDeltaI / (distanceDeltaI + distanceDeltaJ);;
             }
             u(i, j) = coeff * u(i - di, j) + (1 - coeff) * u(i, j - dj);
         }
@@ -176,10 +174,8 @@ void MACGrid::sweepV(size_t iterationCount) {
             if (distanceDeltaJ < 0) {
                 return;
             }
-            float coeff;
-            if (std::abs(distanceDeltaI + distanceDeltaJ) < std::numeric_limits<float>::epsilon()) {
-                coeff = 0.5;
-            } else {
+            float coeff = 0.5f;
+            if (std::abs(distanceDeltaI + distanceDeltaJ) > std::numeric_limits<float>::epsilon()) {
                 coeff = distanceDeltaJ / (distanceDeltaI + distanceDeltaJ);
             }
             v(i, j) = coeff * v(i - di, j) + (1 - coeff) * v(i, j - dj);
